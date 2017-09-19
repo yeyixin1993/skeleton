@@ -5,27 +5,176 @@
     <link rel="stylesheet" href="style.css" />
     <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
+    <style>
+        #container {width:600px;}
+        H1 {float: left;margin-left:20px;}
+
+        .button{
+            background-color:orange;
+            border: 1px solid black;
+            width: 100px;
+            font-size: 2em;
+            color: white;
+            text-align: center;
+            position:relative;
+            border-radius:20px;
+            margin-left:20%;
+            margin-top:25px;
+            display:inline-block;
+        }
+
+        #receiptList {
+            border:1px solid white;
+            clear: both;
+        }
+
+        .receipt {
+            background-color: white;
+            margin-bottom: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+            font-size:x-large;
+        }
+
+        td, th {
+            border: 1px solid #000000;
+            text-align:center;
+        }
+
+        #add-receipt {
+            width: 408px;
+            background: orange;
+            border: 1px solid black;
+            margin-bottom: 18px;
+            margin-top:-3px;
+        }
+
+        #add-receipt input {
+            width: 80%;
+            border: 1px solid black;
+            font-style: italic;
+            padding-left: 10px;
+            font-size: 20px;
+            margin-bottom: 10px;
+            margin-left: 22px;
+            height: 30px;
+        }
+
+        .cancel-receipt {
+            display: inline-block;
+            background-color: red;
+            border: 1px solid black;
+            font-size: 2em;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #save-receipt {
+            display: inline-block;
+            background-color: green;
+            border: 1px solid black;
+            font-size: 2em;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .receipt span, .receiptHeader span {
+            background-color: honeydew;
+            border: 1px solid black;
+            width: 91px;
+            display: inline-block;
+            text-align: center;
+            padding: 11px;
+            margin: -3px;
+        }
+
+        .add-tag {
+            background-color: blue;
+            width: 95%;
+            color: white;
+            text-align: center;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .tag_input {
+            width: 70%;
+            background: white;
+            border: 1px solid black;
+            margin-bottom: 5px;
+        }
+
+        #startButton{
+            background-color:orange;
+            border: 1px solid black;
+            width: 100px;
+            font-size: 2em;
+            color: white;
+            text-align: center;
+            position:relative;
+            border-radius:20px;
+            margin-left:20%;
+            margin-top:25px;
+        }
+
+    </style>
+
     <script>
-        const api = "http://localhost:8080";
+
+        const api = "";
         // This is the idiomatic way to ensure that JQuery does not
         // execute until the page has loaded
+
+        function update() {
+            $(".receipt").remove();
+            $(".receiptHeader").remove();
+            $.getJSON(api+"/receipts", function(receipts){
+                $.getJSON(api+"/fetchtags", function (tags) {
+                    $(`<div class="receiptHeader"><span>Time</span><span>Merchant</span><span>Value</span><span>Tags</span></div>`).appendTo($("#receiptList"))
+                    for (i = 0; i < receipts.length; i++){
+                        tagsURL = '';
+                        for (j = 0; j < tags.length; j++) {
+                            if (tags[j].id==receipts[i].id) {
+                                tagsURL += `<span class="tagValue">${tags[j].tagName}</span>`;
+                            }
+                        }
+                        $(`<div class='receipt'>
+                            <span class="time">${receipts[i].created}</span>
+                            <span class="merchant">${receipts[i].merchantName}</span>
+                            <span class="amount">${receipts[i].value}</span>
+                            <span id=${receipts[i].id} class="tags"><button class="add-tag">Add +</button>${tagsURL}</span>
+                            </div>`).appendTo($("#receiptList"));
+                    }
+                });
+            });
+        }
+
         $(function(){
-            const api = "http://localhost:8080"; // <- do not need a root api URL if this page is served directly by the API
-            const x = " X";
+             // <- do not need a root api URL if this page is served directly by the API
+            $(update());
 
             $(document).on('click','.tagValue',function(){
+                var tag = $(this).text();
+                console.log($(this).parent().attr('id'));
                 $.ajax({
                     type: 'PUT',
-                    url: '/tags/'+$(this).text(),
-                    data: $(this).parent().parent().attr('id'),
+                    url: api+'/tags/'+tag,
+                    data: JSON.stringify($(this).parent().attr('id')),
 
                     success: function(data) {
-
+                        update();
                     },
                     contentType: "application/json",
                     dataType: 'json',
                 });
-                $(this).remove();
             });
 
             $(document).on('click','.add-tag',function(){
@@ -39,19 +188,15 @@
                 {
                     $.ajax({
                         type: 'PUT',
-                        url: '/tags/'+$(this).val(),
-                        data: $(this).parent().parent().attr('id'),
-
-                        success: function(data) {
-
-                        },
+                        url: api+'/tags/'+tag,
+                        data: JSON.stringify($(this).parent().attr('id')),
                         contentType: "application/json",
                         dataType: 'json',
-                    });
+                        success: function(data) {
+                            update();
+                        },
 
-                    $(`<button class="tagValue">${tag}</button>`)
-                        .appendTo($('.tags', $("#"+$(this).parent().parent().attr('id'))));
-                    $(this).remove();
+                    });
 
                 }
 
@@ -59,38 +204,16 @@
 
 
 
-            function tagRemoval(receiptId, tag) {
+           /* function tagRemoval(receiptId, tag) {
                 $.put(api+"/tags" + "/" + tag.innerText.slice(0, -x.length), receiptId, function() {
                     tag.remove();
                 }, 'application/json');
-            }
+            }*/
 
-            $.getJSON(api+"/receipts", function(receipts){
-                var idset = [];
-                for(var i=0; i < receipts.length; i++) {
-                    var receipt = receipts[i];
-                    console.log(receipt);
-                    if($.inArray(receipt.id, idset)==-1){
-                        //none
-                        $(`<div class="receipt" id="${receipt.id}"><span class="time">${receipt.created}</span>
-                        <span class="merchant">${receipt.merchantName}</span>
-                        <span class="amount">${receipt.value}</span>
-                        <span class="tags">
 
-                        <button class="add-tag">Add +</button></span>`)
-                            .appendTo($("#receiptList"));
-                        idset.push(receipt.id);
-                    }else{
-                        $(`<button class="tagValue">${receipt.tag}</button>`)
-                            .appendTo($('.tags', $("#"+receipt.id)));
-                    }
-                    // $(`<div class="receipt">${receipt.merchantName}<div><span class="receiptTag">t1</span></div></div>`)
-                     //   .appendTo($("#receiptList"));
-                }
-
-            });
 
             $('#save-receipt').on('click', function () {
+                console.log("clicked");
                 var data = {
                     merchant: $('#merchant').val(),
                     amount: $('#amount').val()
@@ -113,18 +236,7 @@
                     contentType: 'application/json',
                     data: JSON.stringify(data),
                     success: function (receipt) {
-                        var d = new Date();
-                        var time = d.getHours() + ":" + d.getMinutes();
-
-                        $(`<div class="receipt">
-                        <span class="time">${time}</span>
-                        <span class="merchant">${$("#merchant").val()}</span>
-                        <span class="amount">${$("#amount").val()}</span>
-                        <span class="tags">
-
-                        <button class="add-tag">Add +</button></span>`)
-                            .appendTo($("#receiptList"));
-
+                        update();
                         $('#merchant').val('');
                         $('#amount').val('');
                         $('#add-receipt').hide();
@@ -134,14 +246,6 @@
                     }
                 });
             });
-
-            $(`<div class="receiptHeader">
-                <span>Time</span>
-                <span>Merchant</span>
-                <span>$</span>
-                <span>Tags</span>
-            </div>`)
-                .appendTo($("#receiptList"));
 
         });
 
@@ -162,6 +266,7 @@
             var elapsed = currentTimestamp - timestamp;
             return elapsed+" ago";
         }
+
 
     </script>
 </head>

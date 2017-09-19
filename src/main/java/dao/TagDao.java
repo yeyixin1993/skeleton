@@ -43,12 +43,16 @@ public class TagDao {
         if (dsl.selectFrom(RECEIPTS).where(RECEIPTS.ID.eq(id)).fetchOne() != null) {
             if (dsl.selectFrom(TAGS).where(TAGS.ID.eq(id).and(TAGS.TAG.eq(tag))).fetchOne() != null) {
                 System.out.println("Already had the tag, start to delete");
-                dsl.deleteFrom(TAGS).where(TAGS.ID.eq(id).and(TAGS.TAG.eq(tag)));
+                dsl.deleteFrom(TAGS).where(TAGS.ID.eq(id).and(TAGS.TAG.eq(tag))).execute();
             }
             else {
                 dsl.insertInto(TAGS).values(id, tag).execute();
                 System.out.println("Tag created successfully");
             }
         }
+    }
+
+    public List<TagsRecord> fetchTags() {
+        return dsl.selectFrom(TAGS).fetch();
     }
 }
