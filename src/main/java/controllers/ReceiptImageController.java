@@ -1,6 +1,6 @@
 package controllers;
 
-import api.ReceiptSuggestionResponse;
+import api.*;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import java.math.BigDecimal;
@@ -52,6 +52,7 @@ public class ReceiptImageController {
             // Sort text annotations by bounding polygon.  Top-most non-decimal text is the merchant
             // bottom-most decimal text is the total amount
             for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
+                System.out.println(res);
                 out.printf("Position : %s\n", annotation.getBoundingPoly());
                 out.printf("Text: %s\n", annotation.getDescription());
             }
