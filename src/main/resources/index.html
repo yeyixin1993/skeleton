@@ -18,7 +18,7 @@
             margin: 20px 0;
         }
 
-        #start, #snapshot, #cancel-snapshot {
+        #start-camera, #take-pic, #take-pic-cancel {
             height: 3em;
             margin-top:20px;
         }
@@ -350,10 +350,10 @@
 
 
         $(function () {
-            $('#start').on('click', startVideo);
-            $('video').on('play', () => $('#snapshot').prop('disabled', false));
-            $('#snapshot').on('click', takeSnapshot);
-            $('#cancel-snapshot').on('click', cancelSnapShot);
+            $('#start-camera').on('click', startVideo);
+            $('video').on('play', () => $('#take-pic').prop('disabled', false));
+            $('#take-pic').on('click', takeSnapshot);
+            $('#take-pic-cancel').on('click', cancelSnapShot);
         });
     </script>
 </head>
@@ -372,9 +372,9 @@
             </div>
         </div>
         <div style="display:none" id="add-snapshot">
-            <button id="cancel-snapshot">Cancel</button>
-            <button id="start">Start Video</button>
-            <button id="snapshot" disabled="true">Take a Snapshot!</button>
+            <button id="take-pic-cancel">Cancel</button>
+            <button id="start-camera">Start Video</button>
+            <button id="take-pic" disabled="true">Take a Snapshot!</button>
             <br>
             <div id="vidwrap">
                 <video autoplay></video>
