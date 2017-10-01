@@ -5,7 +5,7 @@
     <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <style>
         body {
-            text-align: center;
+            text-align: left;
         }
 
         video {
@@ -18,8 +18,9 @@
             margin: 20px 0;
         }
 
-        #start, #snapshot {
+        #start, #snapshot, #cancel-snapshot {
             height: 3em;
+            margin-top:20px;
         }
 
         <style>
@@ -35,7 +36,7 @@
             text-align: center;
             position:relative;
             border-radius:20px;
-            margin-left:20%;
+            margin-left:2.5%;
             margin-top:25px;
             display:inline-block;
         }
@@ -147,6 +148,8 @@
 
         let imageCapture;
         let track;
+
+        var cancelStream;
 
         const api = "";
         // This is the idiomatic way to ensure that JQuery does not
@@ -273,12 +276,21 @@
             $('#add-receipt').show();
         }
 
+        function addSnapShot() {
+            console.log("+ button was clicked");
+            $('#add-snapshot').show();
+        }
+
         function cancelReceipt(){
             $('#merchant').val('');
             $('#amount').val('');
             $('#add-receipt').hide();
         }
 
+        function cancelSnapShot() {
+            $('#add-snapshot').hide();
+            cancelStream.getVideoTracks()[0].stop();
+        }
 
         function getTime(timestamp) {
             var currentTimestamp = new Date().getTime();
@@ -288,7 +300,7 @@
 
         function attachMediaStream(mediaStream) {
             $('video')[0].srcObject = mediaStream;
-
+            cancelStream = mediaStream;
             // Saving the track allows us to capture a photo
             track = mediaStream.getVideoTracks()[0];
             imageCapture = new ImageCapture(track);
@@ -323,10 +335,12 @@
                     contentType: "text/plain",
                     success: function() {},
                })
-                .then(response => {
-                    $('video').after(`<div>got response: <pre>${JSON.stringify(response)}</pre></div>`);
-                })
-                .always(() => console.log('request complete'));
+                .then(function (response) {
+                    cancelSnapShot();
+                    $('#merchant').val(response.merchantName);
+                    $('#amount').val(response.amount);
+                    addReceiptForm();
+                }).always(() => console.log('request complete'));
 
                 // For debugging, you can uncomment this to see the frame that was captured
                 //$('BODY').append(canvas);
@@ -339,6 +353,7 @@
             $('#start').on('click', startVideo);
             $('video').on('play', () => $('#snapshot').prop('disabled', false));
             $('#snapshot').on('click', takeSnapshot);
+            $('#cancel-snapshot').on('click', cancelSnapShot);
         });
     </script>
 </head>
@@ -347,7 +362,8 @@
     <DIV id="container">
         <h1>My receipts</h1>
         <div class="button" onclick="addReceiptForm()">+</div>
-        <div id="add-receipt">
+        <div class="button" style="margin-left:0px" onclick="addSnapShot()">Snap</div>
+        <div style="display:none" id="add-receipt">
             <input id="merchant" type="text" placeholder="Please type merchant">
             <input id="amount" type="number" placeholder="Please type amount">
             <div class="">
@@ -355,15 +371,18 @@
                 <button id="save-receipt">Save</button>
             </div>
         </div>
+        <div style="display:none" id="add-snapshot">
+            <button id="cancel-snapshot">Cancel</button>
+            <button id="start">Start Video</button>
+            <button id="snapshot" disabled="true">Take a Snapshot!</button>
+            <br>
+            <div id="vidwrap">
+                <video autoplay></video>
+            </div>
+        </div>
         <div id="receiptList">
         </div>
     </DIV>
-    <button id="start">Start Video</button>
-    <button id="snapshot" disabled="true">Take a Snapshot!</button>
-    <br>
-    <div id="vidwrap">
-        <video autoplay></video>
-    </div>
 </body>
 
 </html>
